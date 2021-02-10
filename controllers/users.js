@@ -14,6 +14,7 @@ const login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
+      // console.log(user);
       // аутентификация успешна! пользователь в переменной user
       const token = jwt.sign({ _id: user._id }, '494239edfbb6a610f4f70432aa79378257f95dc1c0348693e3483b036436a077', { expiresIn: '7d' });
       // вернём токен
