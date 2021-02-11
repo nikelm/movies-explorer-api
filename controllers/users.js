@@ -8,19 +8,24 @@ const ConflictError = require('../errors/ConflictError');
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    throw new BadRequestError('Не указан email или пароль');
-  }
-
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      // console.log(user);
-      // аутентификация успешна! пользователь в переменной user
-      const token = jwt.sign({ _id: user._id }, '494239edfbb6a610f4f70432aa79378257f95dc1c0348693e3483b036436a077', { expiresIn: '7d' });
-      // вернём токен
-      res.send({ token });
-    })
-    .catch((err) => next(err));
+  return User.findOne({ email }).select('+password')
+    .then((userData) => {
+      if (!userData) {
+        throw new BadRequestError('Неверно указан email или пароль');
+      }
+      return bcrypt.compare(password, userData.password)
+        .then((matched) => {
+          if (!matched) {
+            throw new BadRequestError('Неверно указан email или пароль');
+          }
+          return userData;
+        }).then((user) => {
+          // аутентификация успешна! пользователь в переменной user
+          const token = jwt.sign({ _id: user._id }, '494239edfbb6a610f4f70432aa79378257f95dc1c0348693e3483b036436a077', { expiresIn: '7d' });
+          // вернём токен
+          res.send({ token });
+        }).catch((err) => next(err));
+    }).catch((err) => next(err));
 };
 
 const createUser = (req, res, next) => {
@@ -56,7 +61,7 @@ const getProfile = (req, res, next) => User.findById(req.user._id)
     if (!user) {
       throw new NotFoundError('Нет пользователя с таким id');
     }
-    return res.status(200).send(user);
+    return res.status(200).send({ name: user.name, email: user.email });
   })
   .catch((err) => next(err));
 
@@ -69,7 +74,7 @@ const updateProfile = (req, res, next) => {
       if (!user) {
         throw new NotFoundError('Нет пользователя с таким id');
       }
-      return res.status(200).send(user);
+      return res.status(200).send({ name: user.name, email: user.email });
     })
     .catch((err) => next(err));
 };

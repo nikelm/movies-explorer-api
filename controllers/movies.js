@@ -7,9 +7,9 @@ const getMovie = (req, res, next) => Movie.find({})
   .catch((err) => next(err));
 
 const createMovie = (req, res, next) => {
-  const { nameRU, nameEN } = req.body;
+  const { nameRU } = req.body;
 
-  return Movie.findOne({ nameRU, nameEN })
+  return Movie.findOne({ nameRU })
     .then((movie) => {
       if (movie) {
         throw new ConflictError('Этот фильм уже добавлен!');
