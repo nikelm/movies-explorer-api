@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi, errors } = require('celebrate');
@@ -10,10 +11,11 @@ const auth = require('./middlewares/auth');
 const { createUser, login } = require('./controllers/users');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/NotFoundError');
+const ErrorHandler = require('./errors/ErrorHandler');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, MONGO_DB } = process.env;
 
-mongoose.connect('mongodb://localhost:27017/moviesdb', {
+mongoose.connect(MONGO_DB, {
   useNewUrlParser: true,
   useFindAndModify: false,
   useCreateIndex: true,
@@ -21,28 +23,17 @@ mongoose.connect('mongodb://localhost:27017/moviesdb', {
 });
 
 const app = express();
+app.use(helmet());
 
 app.use(bodyParser.json());
 app.use(requestLogger);
 
-app.get('/signup', (req, res, next) => {
-  try {
-    if (req.body || !req.body) {
-      throw new NotFoundError('Запрашиваемый ресурс не найден');
-    }
-  } catch (err) {
-    next(err);
-  }
+app.get('/signup', () => {
+  throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
 
-app.get('/signin', (req, res, next) => {
-  try {
-    if (req.body || !req.body) {
-      throw new NotFoundError('Запрашиваемый ресурс не найден');
-    }
-  } catch (err) {
-    next(err);
-  }
+app.get('/signin', () => {
+  throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
 
 app.post('/signup', celebrate({
@@ -65,20 +56,17 @@ app.use(auth);
 app.use('/', usersRouter);
 app.use('/', moviesRouter);
 
-app.use('*', (req, res, next) => {
-  try {
-    if (req.body || !req.body) {
-      throw new NotFoundError('Запрашиваемый ресурс не найден');
-    }
-  } catch (err) {
-    next(err);
-  }
+app.use('*', () => {
+  throw new NotFoundError('Запрашиваемый ресурс не найден');
 });
 
 app.use(errorLogger);
 
 app.use(errors()); // обработчик ошибок celebrate
 
+app.use(ErrorHandler); // Централизованный обработчик ошибок
+
+/*
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
@@ -86,10 +74,10 @@ app.use((err, req, res, next) => {
     message: statusCode === 500
       ? 'На сервере произошла ошибка'
       : message,
-    status: statusCode,
   });
   next();
 });
+*/
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

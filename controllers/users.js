@@ -5,6 +5,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ConflictError = require('../errors/ConflictError');
+const AuthError = require('../errors/AuthError');
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
@@ -12,12 +13,12 @@ const login = (req, res, next) => {
   return User.findOne({ email }).select('+password')
     .then((userData) => {
       if (!userData) {
-        throw new BadRequestError('Неверно указан email или пароль');
+        throw new AuthError('Неверно указан email или пароль');
       }
       return bcrypt.compare(password, userData.password)
         .then((matched) => {
           if (!matched) {
-            throw new BadRequestError('Неверно указан email или пароль');
+            throw new AuthError('Неверно указан email или пароль');
           }
           return userData;
         }).then((user) => {
@@ -50,8 +51,6 @@ const createUser = (req, res, next) => {
         email: req.body.email,
         password: hash,
         name: req.body.name,
-        about: req.body.about,
-        avatar: req.body.avatar,
       })
         .then((user) => {
           User.findById(user._id)
@@ -71,17 +70,59 @@ const getProfile = (req, res, next) => User.findById(req.user._id)
   .catch((err) => next(err));
 
 const updateProfile = (req, res, next) => {
-  User.findByIdAndUpdate(req.user._id, { name: req.body.name, email: req.body.email }, {
-    new: true,
-    runValidators: true,
-  })
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Нет пользователя с таким id');
+  User.findById(req.user._id)
+    .then((data) => {
+      if (req.body.name && !req.body.email) {
+        return User.findByIdAndUpdate(req.user._id, { name: req.body.name }, {
+          new: true,
+          runValidators: true,
+        }).then((user) => {
+          if (!data) {
+            throw new NotFoundError('Нет пользователя с таким id');
+          }
+          return res.status(200).send({ name: user.name });
+        })
+          .catch((err) => next(err));
       }
-      return res.status(200).send({ name: user.name, email: user.email });
-    })
-    .catch((err) => next(err));
+      if (req.body.email && !req.body.name) {
+        return User.findByIdAndUpdate(req.user._id, { email: req.body.email }, {
+          new: true,
+          runValidators: true,
+        }).then((user) => {
+          if (!user) {
+            throw new NotFoundError('Нет пользователя с таким id');
+          }
+          return res.status(200).send({ email: user.email });
+        })
+          .catch((err) => next(err));
+      }
+      if (!req.body.email && !req.body.name && req.body.password) {
+        return User.findById(req.user._id)
+          .then(() => bcrypt.hash(req.body.password, 10))
+          .then((pass) => {
+            User.findByIdAndUpdate(req.user._id, { password: pass }, {
+              new: true,
+              runValidators: true,
+            }).then((user) => {
+              if (!user) {
+                throw new NotFoundError('Нет пользователя с таким id');
+              }
+              return res.status(200).send({ message: 'Пароль успешно изменен!' });
+            })
+              .catch((err) => next(err));
+          }).catch((err) => next(err));
+      }
+      return User.findByIdAndUpdate(req.user._id, { name: req.body.name, email: req.body.email }, {
+        new: true,
+        runValidators: true,
+      }).then((user) => {
+        if (!user) {
+          throw new NotFoundError('Нет пользователя с таким id');
+        }
+        return res.status(200).send({ name: user.name, email: user.email });
+      })
+        .catch((err) => next(err));
+    });
 };
 
 module.exports = {

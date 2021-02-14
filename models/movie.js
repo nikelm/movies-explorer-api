@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-// const validator = require('validator');
+const validator = require('validator');
 
 const movieSchema = new mongoose.Schema({
   country: {
@@ -26,38 +26,40 @@ const movieSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator(v) {
-        return /(http|https)[-a-zA-Z0-9@:%_\\+.~#?&\\/=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\\+.~#?&\\/=]*)?/.test(v);
+      validator(value) {
+        return validator.isURL(value);
       },
+      message: 'Must be a Valid URL',
     },
   },
   trailer: {
     type: String,
     required: true,
     validate: {
-      validator(v) {
-        return /(http|https)[-a-zA-Z0-9@:%_\\+.~#?&\\/=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\\+.~#?&\\/=]*)?/.test(v);
+      validator(value) {
+        return validator.isURL(value);
       },
+      message: 'Must be a Valid URL',
     },
   },
   thumbnail: {
     type: String,
     required: true,
     validate: {
-      validator(v) {
-        return /(http|https)[-a-zA-Z0-9@:%_\\+.~#?&\\/=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\\+.~#?&\\/=]*)?/.test(v);
+      validator(value) {
+        return validator.isURL(value);
       },
+      message: 'Must be a Valid URL',
     },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
-  movieId: [{
-    type: mongoose.Schema.Types.ObjectId,
-    default: [],
+  movieId: {
+    type: Number,
     required: true,
-  }],
+  },
   nameRU: {
     type: String,
     required: true,
