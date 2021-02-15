@@ -1,7 +1,10 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
 const validator = require('validator');
+const auth = require('../middlewares/auth');
 const { getMovie, createMovie, deleteMovie } = require('../controllers/movies');
+
+router.use(auth);
 
 router.get('/movies', getMovie);
 
