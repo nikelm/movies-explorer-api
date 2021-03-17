@@ -12,7 +12,7 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/NotFoundError');
 const ErrorHandler = require('./errors/ErrorHandler');
 
-const { PORT = 3003, MONGO_DB, NODE_ENV } = process.env;
+const { PORT = 3000, MONGO_DB, NODE_ENV } = process.env;
 
 mongoose.connect(NODE_ENV === 'production' ? MONGO_DB : 'mongodb://localhost:27017/testdb', {
   useNewUrlParser: true,
