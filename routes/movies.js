@@ -19,7 +19,7 @@ router.post('/movies', celebrate({
     year: Joi.string().min(2).max(30).required()
       .pattern(/^[а-яА-ЯёЁa-zA-Z0-9\-\s]+$/),
     description: Joi.string().min(2).required()
-      .pattern(/^[а-яА-ЯёЁa-zA-Z0-9\-'"«»,.—\s]+$/),
+      .pattern(/^[а-яА-ЯёЁa-zA-Z0-9\-':"«»,.—\s]+$/),
     image: Joi.string().required().custom((value, helpers) => {
       if (validator.isURL(value, { protocols: ['http', 'https'], require_tld: true, require_protocol: true })) {
         return value;

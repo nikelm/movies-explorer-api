@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const helmet = require('helmet');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
@@ -11,7 +12,7 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/NotFoundError');
 const ErrorHandler = require('./errors/ErrorHandler');
 
-const { PORT = 3000, MONGO_DB, NODE_ENV } = process.env;
+const { PORT = 3003, MONGO_DB, NODE_ENV } = process.env;
 
 mongoose.connect(NODE_ENV === 'production' ? MONGO_DB : 'mongodb://localhost:27017/testdb', {
   useNewUrlParser: true,
@@ -22,6 +23,7 @@ mongoose.connect(NODE_ENV === 'production' ? MONGO_DB : 'mongodb://localhost:270
 
 const app = express();
 app.use(helmet());
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use(requestLogger);
